@@ -1,0 +1,1131 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>運動打卡</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: phone-first single column. Month header, calendar, check-in form for the picked day, then this month's stats. */
+:root {
+  --bg: #EEF4F3;
+  --surface: #FFFFFF;
+  --fg: #14282A;
+  --muted: #566B6D;
+  --line: #D5E2E0;
+  --accent: #0E7C6B;
+  --on-accent: #FFFFFF;
+  --accent-ink: #0B6455;
+  --i1: #CDEAE4;
+  --i1-ink: #0A5448;
+  --i2: #62BBA8;
+  --i2-ink: #05332B;
+  --i3: #0E7C6B;
+  --i3-ink: #FFFFFF;
+  --warn: #B4472B;
+  --stamp: #C4402B;
+  --blue-bg: #DCE9F7;
+  --blue-ink: #1B4A7A;
+  --blue-bar: #3E7CC0;
+  --amber-bg: #F6E7C6;
+  --amber-ink: #6B4A0B;
+  --amber-bar: #B87810;
+  --violet-bg: #E6DEF5;
+  --violet-ink: #47328A;
+  --violet-bar: #7B61C4;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-num: "Space Grotesk", "Noto Sans TC", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1718;
+    --surface: #152325;
+    --fg: #E4EFEE;
+    --muted: #93AAAB;
+    --line: #26393B;
+    --accent: #4CC5AE;
+    --on-accent: #06302A;
+    --accent-ink: #6FD6C0;
+    --i1: #1D4A43;
+    --i1-ink: #BDEBE1;
+    --i2: #257A6B;
+    --i2-ink: #FFFFFF;
+    --i3: #4CC5AE;
+    --i3-ink: #052B25;
+    --warn: #FF9A80;
+    --stamp: #FF8A70;
+    --blue-bg: #1B3350;
+    --blue-ink: #BBD6F5;
+    --blue-bar: #6BA6E8;
+    --amber-bg: #4A3A14;
+    --amber-ink: #F3DDA6;
+    --amber-bar: #E0A93E;
+    --violet-bg: #33284F;
+    --violet-ink: #D9CCF5;
+    --violet-bar: #A48DE8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1718;
+  --surface: #152325;
+  --fg: #E4EFEE;
+  --muted: #93AAAB;
+  --line: #26393B;
+  --accent: #4CC5AE;
+  --on-accent: #06302A;
+  --accent-ink: #6FD6C0;
+  --i1: #1D4A43;
+  --i1-ink: #BDEBE1;
+  --i2: #257A6B;
+  --i2-ink: #FFFFFF;
+  --i3: #4CC5AE;
+  --i3-ink: #052B25;
+  --warn: #FF9A80;
+  --stamp: #FF8A70;
+  --blue-bg: #1B3350;
+  --blue-ink: #BBD6F5;
+  --blue-bar: #6BA6E8;
+  --amber-bg: #4A3A14;
+  --amber-ink: #F3DDA6;
+  --amber-bar: #E0A93E;
+  --violet-bg: #33284F;
+  --violet-ink: #D9CCF5;
+  --violet-bar: #A48DE8;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 2px;
+}
+.wrap { max-width: 520px; margin: 0 auto; display: grid; gap: 16px; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+}
+h1, h2, h3, p { margin: 0; }
+h2 { font-size: 17px; font-weight: 700; text-wrap: balance; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+/* header */
+.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.eyebrow { font-size: 13px; font-weight: 500; color: var(--muted); letter-spacing: 0.08em; }
+h1 { font-size: 28px; font-weight: 700; line-height: 1.2; text-wrap: balance; }
+h1 .yr { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.nav { display: flex; gap: 8px; align-items: center; }
+.icon-btn {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 12px;
+}
+.icon-btn:disabled { opacity: 0.35; cursor: default; }
+.icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.back-now {
+  height: 40px; padding: 0 12px;
+  border: 1px solid var(--accent-ink);
+  background: transparent;
+  color: var(--accent-ink);
+  border-radius: 12px;
+  font-size: 14px; font-weight: 500;
+}
+.slogan { font-size: 13px; font-weight: 500; color: var(--accent-ink); letter-spacing: 0.08em; margin-top: -4px; text-wrap: balance; }
+.status { font-size: 13px; color: var(--muted); margin-top: -6px; }
+.status:empty { display: none; }
+
+/* calendar */
+.dow, .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.dow { margin-bottom: 6px; text-align: center; font-size: 12px; color: var(--muted); }
+.day {
+  position: relative;
+  aspect-ratio: 1;
+  max-width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-num);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  padding: 0;
+}
+.day .dn { position: absolute; top: 5px; left: 6px; font-size: 11px; line-height: 1; }
+.day .stamp { position: absolute; left: 58%; top: 61%; width: 66%; height: auto; color: var(--stamp); opacity: 0.92; transform: translate(-50%, -50%) rotate(-12deg); pointer-events: none; }
+.day:disabled { opacity: 0.4; cursor: default; }
+.day.today { font-weight: 700; box-shadow: inset 0 0 0 2px var(--accent-ink); }
+.day[aria-pressed="true"] { outline: 2px solid var(--fg); outline-offset: 2px; }
+.legend-note { display: flex; align-items: center; gap: 8px; margin: 14px 0 0; font-size: 12px; color: var(--muted); }
+.legend-note svg { width: 22px; height: 22px; flex: none; color: var(--stamp); transform: rotate(-12deg); }
+.sw { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+.sw.l1 { background: var(--i1); } .sw.l2 { background: var(--i2); } .sw.l3 { background: var(--i3); }
+
+/* day panel */
+.day-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.tag { font-size: 12px; font-weight: 500; color: var(--accent-ink); }
+.entries { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+.entry {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center;
+  padding: 10px 12px; background: var(--bg); border-radius: 10px;
+}
+.entry .what { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.entry strong { font-weight: 700; overflow-wrap: anywhere; }
+.entry .where { grid-column: 1; font-size: 13px; color: var(--muted); }
+.entry .del { grid-row: 1 / span 2; grid-column: 2; border: 0; background: transparent; color: var(--muted); min-height: 40px; padding: 0 8px; border-radius: 8px; font-size: 13px; }
+.entry .del.sure { color: var(--warn); font-weight: 700; }
+.pill { font-size: 12px; padding: 1px 8px; border-radius: 999px; font-weight: 500; }
+.pill.l1 { background: var(--i1); color: var(--i1-ink); }
+.pill.l2 { background: var(--i2); color: var(--i2-ink); }
+.pill.l3 { background: var(--i3); color: var(--i3-ink); }
+.pill.relax { background: var(--surface); color: var(--muted); border: 1px solid var(--line); }
+.empty { color: var(--muted); font-size: 14px; margin-top: 12px; }
+
+form { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; gap: 16px; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+fieldset:disabled { opacity: 0.4; }
+fieldset:disabled button, fieldset:disabled input { cursor: default; }
+legend, .lab-title { font-size: 13px; font-weight: 700; color: var(--muted); padding: 0; margin-bottom: 8px; letter-spacing: 0.04em; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  min-height: 40px; padding: 6px 14px;
+  border: 1px solid var(--line); background: var(--surface);
+  border-radius: 999px; font-size: 14px;
+}
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 500; }
+.seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); min-height: 44px; font-size: 14px; border-left: 1px solid var(--line); }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-checked="true"] { font-weight: 700; }
+.seg button.l1[aria-checked="true"] { background: var(--i1); color: var(--i1-ink); }
+.seg button.l2[aria-checked="true"] { background: var(--i2); color: var(--i2-ink); }
+.seg button.l3[aria-checked="true"] { background: var(--i3); color: var(--i3-ink); }
+.hint { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.hint.err { color: var(--warn); }
+.add-row { display: flex; gap: 8px; margin-top: 10px; }
+.add-row .text-in { margin-top: 0; flex: 1; min-width: 0; width: auto; }
+.add-btn { min-height: 44px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--accent); color: var(--on-accent); font-weight: 700; }
+.link-btn { margin-top: 12px; min-height: 40px; padding: 0; border: 0; background: transparent; color: var(--muted); font-size: 13px; text-decoration: underline; }
+.text-in {
+  width: 100%; margin-top: 10px; min-height: 44px; padding: 8px 12px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--bg); color: var(--fg); font: inherit;
+}
+.submit {
+  min-height: 48px; border: 0; border-radius: 12px;
+  background: var(--accent); color: var(--on-accent);
+  font-size: 16px; font-weight: 700;
+}
+.msg { font-size: 14px; min-height: 1.5em; color: var(--accent-ink); margin-top: -8px; }
+.msg.err { color: var(--warn); }
+
+/* stats */
+.stats3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12px; }
+.stat { padding: 0 10px; min-width: 0; border-left: 1px solid var(--line); }
+.stat:first-child { padding-left: 0; border-left: 0; }
+.stat .big { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 26px; font-weight: 700; line-height: 1.15; white-space: nowrap; }
+.stat .big small { font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 2px; }
+.stat .cap { font-size: 12px; color: var(--muted); }
+.block { margin-top: 24px; }
+.block h3 { margin: 0 0 12px; padding: 8px 12px; border-radius: 10px; font-size: 16px; font-weight: 700; letter-spacing: 0.04em; background: var(--sec-bg); color: var(--sec-ink); }
+.sec-blue { --sec-bg: var(--blue-bg); --sec-ink: var(--blue-ink); --sec-bar: var(--blue-bar); }
+.sec-teal { --sec-bg: var(--i1); --sec-ink: var(--i1-ink); }
+.sec-amber { --sec-bg: var(--amber-bg); --sec-ink: var(--amber-ink); --sec-bar: var(--amber-bar); }
+.sec-violet { --sec-bg: var(--violet-bg); --sec-ink: var(--violet-ink); --sec-bar: var(--violet-bar); }
+.block .note { margin-top: 10px; }
+.bars { display: grid; gap: 8px; }
+.row { display: grid; grid-template-columns: 5.5em minmax(0, 1fr) 2em; gap: 10px; align-items: center; font-size: 14px; }
+.row .l { overflow-wrap: anywhere; line-height: 1.3; }
+.row .track { height: 10px; background: var(--bg); border-radius: 999px; overflow: hidden; }
+.row .track b { display: block; height: 100%; background: var(--sec-bar, var(--accent)); border-radius: 999px; }
+.row .track b.relax { background: var(--accent); }
+.row .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; text-align: right; }
+.stack { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: var(--bg); gap: 2px; }
+.stack b { display: block; height: 100%; }
+.stack b.l1 { background: var(--i1); } .stack b.l2 { background: var(--i2); } .stack b.l3 { background: var(--i3); }
+.stack-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; font-size: 13px; }
+.stack-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.note { font-size: 12px; color: var(--muted); margin-top: 16px; }
+.mins-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 14px; color: var(--muted); }
+.mins-row .text-in { margin-top: 0; width: 9.5em; }
+.entry .mins { font-size: 13px; color: var(--muted); }
+.time2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.time2 > div { padding: 0 12px; border-left: 1px solid var(--line); min-width: 0; }
+.time2 > div:first-child { padding-left: 0; border-left: 0; }
+.time2 .big2 { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 700; line-height: 1.3; }
+.time2 .big2 small { font-size: 13px; font-weight: 500; color: var(--muted); margin: 0 2px; }
+.time2 .cap { font-size: 12px; color: var(--muted); }
+.goal { margin-top: 16px; }
+.goal-top { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; margin-bottom: 6px; }
+.goal .track { height: 10px; background: var(--bg); border-radius: 999px; overflow: hidden; }
+.goal .track b { display: block; height: 100%; background: var(--sec-bar, var(--accent)); border-radius: 999px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .chip, .day, .seg button, .submit { transition: background-color 0.15s, color 0.15s; }
+  .day .stamp.fresh { animation: stamp-down 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15) both; }
+}
+@keyframes stamp-down {
+  from { opacity: 0; transform: translate(-50%, -50%) rotate(-24deg) scale(1.8); }
+  to { opacity: 0.92; transform: translate(-50%, -50%) rotate(-12deg) scale(1); }
+}
+</style>
+</head>
+<body>
+<main class="wrap" id="app">
+  <header class="top">
+    <div>
+      <p class="eyebrow">運動打卡</p>
+      <h1 id="month-title">&nbsp;</h1>
+    </div>
+    <div class="nav">
+      <button type="button" class="back-now" id="back-now" data-action="today" hidden>回到本月</button>
+      <button type="button" class="icon-btn" data-action="prev" aria-label="上一個月">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="next-btn" data-action="next" aria-label="下一個月">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </header>
+  <p class="slogan" id="slogan"></p>
+  <p class="status" id="status" role="status">正在讀取你的紀錄…</p>
+
+  <section class="card" aria-label="月曆">
+    <div class="dow" aria-hidden="true"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+    <div class="grid" id="cal"></div>
+    <p class="legend-note"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17.5" fill="none" stroke="currentColor" stroke-width="2.6"/><circle cx="20" cy="20" r="13.8" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M12.5 20.8l5.2 5.2 9.8-11.2" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>蓋章代表當天已打卡（只做滾筒、伸展不蓋章），顏色淡的日子還沒到。</span></p>
+  </section>
+
+  <section class="card" aria-label="打卡">
+    <div class="day-head">
+      <h2 id="day-title"></h2>
+      <span class="tag" id="day-tag"></span>
+    </div>
+    <ul class="entries" id="entries"></ul>
+    <p class="empty" id="entries-empty" hidden>這天還沒有紀錄。選好項目、時間、強度和部位後按打卡。</p>
+
+    <form id="f" autocomplete="off" novalidate>
+      <fieldset>
+        <legend>運動項目</legend>
+        <div class="chips" id="sports"></div>
+        <div id="other-wrap" hidden>
+          <div class="add-row">
+            <input class="text-in" id="other" type="text" maxlength="12" placeholder="輸入新的運動名稱，例如：登山" aria-label="新的運動名稱">
+            <button type="button" class="add-btn" data-action="addsport">加入</button>
+          </div>
+          <p class="hint" id="other-hint">加入後會一直留在上面的選項裡。</p>
+        </div>
+        <p class="hint" id="relax-hint" hidden>滾筒、伸展是放鬆項目：不用填時間、強度和部位，也不計入打卡天數，只會出現在運動項目的次數統計。</p>
+      </fieldset>
+      <fieldset id="fs-time">
+        <legend>運動時間</legend>
+        <div class="chips" id="mins-chips"></div>
+        <div class="mins-row">
+          <input class="text-in" id="mins" type="number" inputmode="decimal" min="0.5" max="600" step="0.5" placeholder="自己輸入" aria-label="運動分鐘數">
+          <span>分鐘</span>
+        </div>
+      </fieldset>
+      <fieldset id="fs-level">
+        <legend>強度</legend>
+        <div class="seg" id="levels" role="radiogroup" aria-label="強度"></div>
+        <p class="hint" id="level-hint"></p>
+      </fieldset>
+      <fieldset id="fs-parts">
+        <legend>運動部位（可多選）</legend>
+        <div class="chips" id="parts"></div>
+        <div id="part-other-wrap" hidden>
+          <div class="add-row">
+            <input class="text-in" id="part-other" type="text" maxlength="12" placeholder="輸入新的運動部位，例如：頸部" aria-label="新的運動部位">
+            <button type="button" class="add-btn" data-action="addpart">加入</button>
+          </div>
+          <p class="hint" id="part-other-hint">加入後會一直留在上面的選項裡。</p>
+        </div>
+      </fieldset>
+      <button type="submit" class="submit" id="submit">今天打卡</button>
+      <p class="msg" id="msg" role="status"></p>
+    </form>
+  </section>
+
+  <section class="card" aria-label="本月統計">
+    <h2 id="stats-title">本月統計</h2>
+    <div id="stats"></div>
+  </section>
+
+  <section class="card" id="sync-card" aria-label="雲端同步" hidden>
+    <h2>雲端同步</h2>
+    <p class="hint" id="sync-state">尚未啟用，紀錄只存在這個瀏覽器。</p>
+    <div class="add-row">
+      <input class="text-in" id="sync-url" type="url" inputmode="url" autocomplete="off" placeholder="貼上 Google 試算表的同步網址" aria-label="Google 試算表同步網址">
+      <button type="button" class="add-btn" data-action="savesync">儲存</button>
+    </div>
+    <button type="button" class="link-btn" id="sync-off" data-action="clearsync" hidden>停用同步</button>
+  </section>
+</main>
+
+<script>
+(function () {
+  var SPORTS = ['跑步', '快走', '散步', '爬樓梯', '騎單車', '游泳', '跳繩', '重量訓練', '彈力繩', '徒手肌力', '棒式', '伸展', '滾筒'];
+  var RELAX = ['滾筒', '伸展'];   // relax items: only counted in the sports bar chart, nowhere else
+  var OTHER = '其它';        // chip that opens the add-a-new-item box
+  var RENAMES = { '騎車': '騎單車', '徒手訓練': '徒手肌力', '瑜伽伸展': '伸展' };   // old names found in saved records
+  var CUSTOM_KEY = 'workout-checkin-custom-v2';       // { sports: [], parts: [] }
+  var CUSTOM_KEY_V1 = 'workout-checkin-custom-v1';   // older format: sports only
+  var PARTS = ['胸', '背', '手臂', '肩', '核心', '腹部', '臀', '腿', '心肺', '肢體協調', '肢體靈活', '全身', '全身代謝'];
+  var LEVELS = [
+    { k: 1, name: '輕鬆', hint: '輕鬆：可以正常聊天，幾乎不喘。' },
+    { k: 2, name: '中等', hint: '中等：有點喘，但還能說完整句話。' },
+    { k: 3, name: '高強度', hint: '高強度：喘到只能說幾個字。' }
+  ];
+  var WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+  /* one line per day, cycling through the list by calendar day */
+  var SLOGANS = [
+    '每天一點點，身體會記得',
+    '今天動一動，明天更輕鬆',
+    '慢慢來，比較快',
+    '做了，就是進步',
+    '先動起來，感覺會跟上',
+    '小小的堅持，累積大大的改變',
+    '你的身體，正在謝謝你',
+    '不用完美，只要出現',
+    '動一動，心情也會變好',
+    '今天比昨天，多走一步',
+    '肌肉在休息時，悄悄長大',
+    '好習慣，是一天一天蓋出來的',
+    '先開始，再慢慢變強',
+    '微微喘一點，剛剛好',
+    '照顧身體，是最好的投資',
+    '流過汗的日子，都算數',
+    '不跟別人比，只跟昨天比',
+    '動起來，煩惱會變小',
+    '慢一點沒關係，別停下來',
+    '累了就休息，休息完再出發',
+    '你比想像中更有力量',
+    '每一個小動作，都在鋪路',
+    '今天做一點，就是好的一天',
+    '持續，比用力更重要',
+    '一步一步，穩穩變強',
+    '笑著動一動，身體更輕盈',
+    '呼吸、伸展、再前進',
+    '動與靜，都是在照顧自己',
+    '力量，是從重複中長出來的',
+    '保持節奏，不用急',
+    '今天的汗水，是明天的底氣',
+    '把運動當成送給自己的禮物',
+    '每天出現，就已經成功一半',
+    '讓身體動起來，讓心靜下來',
+    '一點一滴，終會成河',
+    '好好動，也好好休息'
+  ];
+  var LS_KEY = 'workout-checkin-v1';
+  var WEEK_GOAL = 150;
+  var MINS_PRESETS = [0.5, 10, 20, 30, 45, 60];
+  var STAMP_PATHS = '<circle cx="20" cy="20" r="17.5" fill="none" stroke="currentColor" stroke-width="2.6"/>' +
+    '<circle cx="20" cy="20" r="13.8" fill="none" stroke="currentColor" stroke-width="1.1"/>' +
+    '<path d="M12.5 20.8l5.2 5.2 9.8-11.2" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>';
+  function stampSVG(fresh) {
+    return '<svg class="stamp' + (fresh ? ' fresh' : '') + '" viewBox="0 0 40 40" aria-hidden="true">' + STAMP_PATHS + '</svg>';
+  }
+
+  var pad = function (n) { return String(n).padStart(2, '0'); };
+  var keyOf = function (y, m, d) { return y + '-' + pad(m + 1) + '-' + pad(d); };
+  var esc = function (s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  };
+  var $ = function (id) { return document.getElementById(id); };
+
+  var now = new Date();
+  var todayKey = keyOf(now.getFullYear(), now.getMonth(), now.getDate());
+  var view = { y: now.getFullYear(), m: now.getMonth() };
+  var selected = todayKey;
+  var data = {};            // 'YYYY-MM-DD' -> [{sport, level, parts[]}]
+  var form = { sport: '', other: '', level: 2, parts: [], mins: 0, partsOpen: false };
+  var customSports = [];     // items added with 其它; kept until someone removes them in code
+  var customParts = [];      // same for body parts
+  var lastCustomSig = '';
+  var lastPartsSig = '';
+  var freshKey = null;      // day whose stamp was just applied, so it plays the stamp-down animation
+  var remote = null;        // { col } when the cloud store is in use
+  var pendingDel = null;    // { k, i }
+  var pendingTimer = null;
+  var msgTimer = null;
+  var writeChain = Promise.resolve();
+
+  function isCurrentMonth() { return view.y === now.getFullYear() && view.m === now.getMonth(); }
+  function maxLevel(list) { return list.reduce(function (a, e) { return Math.max(a, e.level); }, 0); }
+
+  /* ---------- optional Google Sheet sync ---------- */
+  var SYNC_URL = '';        // paste a Web App URL here to skip the box at the bottom of the page
+  var SYNC_KEY = 'workout-checkin-sync-url';
+  var QUEUE_KEY = 'workout-checkin-queue-v1';
+  var sheetUrl = '';
+  var flushPromise = null;
+  var lastPull = 0;
+  var idsAdded = false;
+  function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function getSyncUrl() {
+    if (SYNC_URL) return SYNC_URL;
+    try { return localStorage.getItem(SYNC_KEY) || ''; } catch (e) { return ''; }
+  }
+  function readQueue() {
+    try { var q = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); return Array.isArray(q) ? q : []; }
+    catch (e) { return []; }
+  }
+  function writeQueue(q) { try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); } catch (e) { /* ignore */ } }
+  function saveCache() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(data));
+      localStorage.setItem(CUSTOM_KEY, JSON.stringify({ sports: customSports, parts: customParts }));
+    } catch (e) { /* ignore */ }
+  }
+  function sheetEntry(date, e) {
+    return { id: e.id, date: date, sport: e.sport, type: isRelax(e.sport) ? '放鬆' : '運動', mins: e.mins || 0, level: e.level || 0, parts: e.parts || [] };
+  }
+  function syncMsg(t, isErr) {
+    var el = $('sync-state');
+    el.textContent = t;
+    el.className = 'hint' + (isErr ? ' err' : '');
+  }
+  function syncState(s) {
+    var msgs = {
+      ok: '已和 Google 試算表同步。',
+      pending: '有紀錄還沒傳到試算表，連上網路後會自動補傳。',
+      offline: '連不上試算表，目前顯示這台裝置上的紀錄。'
+    };
+    syncMsg(msgs[s], s !== 'ok');
+    setStatus(s === 'ok' ? '' : msgs[s]);
+  }
+  function queueOp(op) {
+    if (!sheetUrl) return;
+    var q = readQueue(); q.push(op); writeQueue(q);
+    flushQueue();
+  }
+  function sheetPost(body) {
+    return fetch(sheetUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); });
+  }
+  /* sends queued changes in order; a network failure leaves them queued for the next try */
+  function flushQueue() {
+    if (!sheetUrl) return Promise.resolve(true);
+    if (!flushPromise) {
+      flushPromise = doFlush().then(function (ok) { flushPromise = null; return ok; });
+    }
+    return flushPromise;
+  }
+  async function doFlush() {
+    var ok = true;
+    try {
+      for (;;) {
+        var q = readQueue();
+        if (!q.length) break;
+        await sheetPost(q[0]);                       // throws when the sheet cannot be reached
+        q = readQueue(); q.shift(); writeQueue(q);   // re-read so changes made meanwhile are kept
+      }
+    } catch (e) { ok = false; }
+    syncState(ok ? 'ok' : 'pending');
+    return ok;
+  }
+  /* replaces what is on screen with the sheet's content, but never while changes are still unsent */
+  async function pullSheet() {
+    var ok = await flushQueue();
+    if (!ok || readQueue().length) return false;
+    try {
+      var r = await fetch(sheetUrl + (sheetUrl.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now());
+      var j = await r.json();
+      if (!j || !j.ok) throw new Error('sheet');
+      if (readQueue().length) return false;          // something was added while we waited
+      var next = {};
+      (j.records || []).forEach(function (x) {
+        var k = String(x.date || '');
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
+        (next[k] = next[k] || []).push({ id: x.id, sport: x.sport, level: x.level, parts: x.parts, mins: x.mins });
+      });
+      Object.keys(next).forEach(function (k) { next[k] = clean(next[k]); });
+      data = next;
+      customSports = cleanCustom(j.customSports, SPORTS, true);
+      customParts = cleanCustom(j.customParts, PARTS, false);
+      saveCache();
+      lastPull = Date.now();
+      refreshSports();
+      refreshParts();
+      renderAll();
+      syncState('ok');
+      return true;
+    } catch (e) {
+      syncState('offline');
+      return false;
+    }
+  }
+  async function enableSync(url) {
+    url = String(url || '').trim();
+    if (!/^https:\/\/script\.google\.com\/(a\/macros\/[^\/\s]+|macros)\/s\/[^\s?#\/]+\/exec$/.test(url)) {
+      syncMsg('請貼上以 https://script.google.com/macros/s/ 開頭、以 /exec 結尾的網址。', true);
+      return;
+    }
+    try { localStorage.setItem(SYNC_KEY, url); } catch (e) { syncMsg('這個瀏覽器無法儲存設定。', true); return; }
+    sheetUrl = url;
+    $('sync-off').hidden = false;
+    // everything already on this device goes up first; the sheet skips ids it already has
+    var q = readQueue().filter(function (op) { return op.op === 'delete'; });
+    var all = [];
+    Object.keys(data).forEach(function (k) { data[k].forEach(function (e) { all.push(sheetEntry(k, e)); }); });
+    for (var i = 0; i < all.length; i += 100) q.push({ op: 'addMany', entries: all.slice(i, i + 100) });
+    customSports.forEach(function (n) { q.push({ op: 'addCustom', kind: 'sport', name: n }); });
+    customParts.forEach(function (n) { q.push({ op: 'addCustom', kind: 'part', name: n }); });
+    writeQueue(q);
+    saveCache();
+    syncMsg('同步中…', false);
+    var ok = await pullSheet();
+    if (ok) $('sync-url').value = '';
+    else syncMsg('連不到這個網址。請確認部署時「誰可以存取」選的是「所有人」，再重新貼上。', true);
+  }
+  function disableSync() {
+    try { localStorage.removeItem(SYNC_KEY); } catch (e) { /* ignore */ }
+    sheetUrl = '';
+    $('sync-off').hidden = true;
+    syncMsg('已停用同步，紀錄只存在這個瀏覽器。', false);
+    setStatus('紀錄只存在這個瀏覽器，換裝置不會同步。');
+  }
+
+  /* ---------- storage ---------- */
+  function persist(k) {
+    var list = data[k] || [];
+    if (remote) {
+      var ref = remote.col.doc(k);
+      writeChain = writeChain
+        .then(function () { return list.length ? ref.set({ date: k, entries: list }) : ref.delete(); })
+        .catch(function () { showMsg('沒有存成功，請稍後再試一次。', true); });
+    } else {
+      try { localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+      catch (e) { showMsg('這個瀏覽器無法儲存紀錄。', true); }
+    }
+  }
+  function clean(entries) {
+    return (entries || []).map(function (e) {
+      var sport = renameSport(String(e.sport || '其他'));
+      var id = String(e.id || '');
+      if (!id) { id = newId(); idsAdded = true; }
+      if (isRelax(sport)) return { id: id, sport: sport, level: 0, parts: [], mins: 0 };   // relax items carry no level, parts or time
+      return {
+        id: id,
+        sport: sport,
+        level: [1, 2, 3].indexOf(Number(e.level)) >= 0 ? Number(e.level) : 2,
+        parts: Array.isArray(e.parts) ? e.parts.map(String) : [],
+        mins: Number(e.mins) > 0 ? Math.round(Number(e.mins) * 2) / 2 : 0
+      };
+    });
+  }
+  function renameSport(n) { return Object.prototype.hasOwnProperty.call(RENAMES, n) ? RENAMES[n] : n; }
+  function cleanCustom(arr, builtin, isSport) {
+    var out = [];
+    (Array.isArray(arr) ? arr : []).forEach(function (n) {
+      n = String(n).trim().slice(0, 12);
+      if (isSport) n = renameSport(n);
+      if (n && n !== OTHER && builtin.indexOf(n) < 0 && out.indexOf(n) < 0) out.push(n);
+    });
+    return out;
+  }
+  /* field is 'customSports' or 'customParts'; only that field is written so the other list is never overwritten */
+  function saveCustom(field, name) {
+    var list = (field === 'customParts' ? customParts : customSports).slice();
+    if (remote) {
+      var ref = remote.col.doc('settings');
+      var patch = {}; patch[field] = list;
+      writeChain = writeChain
+        .then(function () {
+          return ref.update(patch).catch(function () {
+            return ref.set({ customSports: customSports.slice(), customParts: customParts.slice() });
+          });
+        })
+        .catch(function () { showMsg('沒有存成功，請稍後再試一次。', true); });
+    } else {
+      try { localStorage.setItem(CUSTOM_KEY, JSON.stringify({ sports: customSports, parts: customParts })); }
+      catch (e) { showMsg('這個瀏覽器無法儲存紀錄。', true); }
+      if (name) queueOp({ op: 'addCustom', kind: field === 'customParts' ? 'part' : 'sport', name: name });
+    }
+  }
+  function fmtNum(x) {
+    var r = Math.round(x * 10) / 10;
+    return Number.isInteger(r) ? String(r) : r.toFixed(1);
+  }
+  function isRelax(n) { return RELAX.indexOf(n) >= 0; }
+  function setSlogan() {
+    var day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
+    $('slogan').textContent = SLOGANS[day % SLOGANS.length];
+  }
+  function setStatus(t) { $('status').textContent = t; }
+
+  async function init() {
+    setSlogan();
+    buildForm();
+    syncForm();
+    renderAll();
+    var db = null, uid = null;
+    try {
+      if (window.claude && window.claude.use) {
+        db = await window.claude.use('db');
+        var user = await window.claude.use('user');
+        uid = user ? await user.id() : null;
+      }
+    } catch (e) { db = null; uid = null; }
+
+    if (db && uid) {
+      remote = { col: db.collection('data/users/' + uid) };
+      var fresh = false;
+      var timer = setTimeout(function () {
+        if (!fresh) setStatus('暫時連不上資料，畫面可能不是最新。');
+      }, 10000);
+      remote.col.onSnapshot(function (snap) {
+        var next = {}, sawSettings = false;
+        snap.docs.forEach(function (d) {
+          var v = d.data();
+          if (d.id === 'settings') {
+            sawSettings = true;
+            customSports = cleanCustom(v && v.customSports, SPORTS, true);
+            customParts = cleanCustom(v && v.customParts, PARTS, false);
+            return;
+          }
+          if (v && Array.isArray(v.entries) && v.entries.length) next[d.id] = clean(v.entries);
+        });
+        if (!sawSettings) { customSports = []; customParts = []; }
+        data = next;
+        refreshSports();
+        refreshParts();
+        if (!snap.metadata.fromCache) { fresh = true; clearTimeout(timer); setStatus(''); }
+        renderAll();
+      }, function () {
+        clearTimeout(timer);
+        setStatus('無法讀取紀錄，請重新開啟頁面。');
+      });
+    } else {
+      try {
+        var raw = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+        Object.keys(raw).forEach(function (k) { data[k] = clean(raw[k]); });
+      } catch (e) { data = {}; }
+      try {
+        var cs = JSON.parse(localStorage.getItem(CUSTOM_KEY) || 'null');
+        if (cs && !Array.isArray(cs)) {
+          customSports = cleanCustom(cs.sports, SPORTS, true);
+          customParts = cleanCustom(cs.parts, PARTS, false);
+        } else {
+          customSports = cleanCustom(JSON.parse(localStorage.getItem(CUSTOM_KEY_V1) || '[]'), SPORTS, true);
+        }
+      } catch (e) { customSports = []; customParts = []; }
+      refreshSports();
+      refreshParts();
+      if (idsAdded) saveCache();   // keep the ids just made so a later upload never duplicates entries
+      renderAll();
+      $('sync-card').hidden = !!SYNC_URL;
+      sheetUrl = getSyncUrl();
+      if (sheetUrl) {
+        $('sync-off').hidden = !!SYNC_URL;
+        syncMsg('同步中…', false);
+        setStatus('同步中…');
+        pullSheet();
+      } else {
+        setStatus('紀錄只存在這個瀏覽器，換裝置不會同步。');
+      }
+    }
+  }
+
+  /* ---------- form ---------- */
+  var OTHER_HINT = '加入後會一直留在上面的選項裡。';
+  function otherHint(t, isErr) {
+    var el = $('other-hint');
+    el.textContent = t || OTHER_HINT;
+    el.className = 'hint' + (isErr ? ' err' : '');
+  }
+  function buildSports() {
+    var list = SPORTS.concat(customSports);
+    $('sports').innerHTML = list.map(function (s) {
+      return '<button type="button" class="chip" data-action="sport" data-v="' + esc(s) + '" aria-pressed="false">' + esc(s) + '</button>';
+    }).join('') + '<button type="button" class="chip" data-action="sport" data-v="' + OTHER + '" aria-pressed="false">＋ ' + OTHER + '</button>';
+  }
+  function refreshSports() {
+    var sig = JSON.stringify(customSports);
+    if (sig !== lastCustomSig) { lastCustomSig = sig; buildSports(); syncForm(); }
+  }
+  /* adds the typed name as a permanent chip (no delete button on purpose) and selects it */
+  function addCustomSport() {
+    var name = renameSport($('other').value.trim());
+    if (!name) { otherHint('請輸入運動名稱。', true); return false; }
+    if (name === OTHER) { otherHint('請取一個不同的名稱。', true); return false; }
+    if (SPORTS.concat(customSports).indexOf(name) < 0) {
+      if (customSports.length >= 30) { otherHint('自訂項目最多 30 個。', true); return false; }
+      customSports.push(name);
+      lastCustomSig = JSON.stringify(customSports);
+      saveCustom('customSports', name);
+      buildSports();
+    }
+    form.sport = name;
+    form.other = '';
+    $('other').value = '';
+    otherHint('', false);
+    syncForm();
+    return true;
+  }
+  var PART_HINT = '加入後會一直留在上面的選項裡。';
+  function partHint(t, isErr) {
+    var el = $('part-other-hint');
+    el.textContent = t || PART_HINT;
+    el.className = 'hint' + (isErr ? ' err' : '');
+  }
+  function buildParts() {
+    $('parts').innerHTML = PARTS.concat(customParts).map(function (p) {
+      return '<button type="button" class="chip" data-action="part" data-v="' + esc(p) + '" aria-pressed="false">' + esc(p) + '</button>';
+    }).join('') + '<button type="button" class="chip" data-action="partother" aria-pressed="false">＋ ' + OTHER + '</button>';
+  }
+  function refreshParts() {
+    var sig = JSON.stringify(customParts);
+    if (sig !== lastPartsSig) { lastPartsSig = sig; buildParts(); syncForm(); }
+  }
+  /* adds the typed name as a permanent part chip (no delete button on purpose) and selects it */
+  function addCustomPart() {
+    var name = $('part-other').value.trim();
+    if (!name) { partHint('請輸入部位名稱。', true); return false; }
+    if (name === OTHER) { partHint('請取一個不同的名稱。', true); return false; }
+    if (PARTS.concat(customParts).indexOf(name) < 0) {
+      if (customParts.length >= 30) { partHint('自訂項目最多 30 個。', true); return false; }
+      customParts.push(name);
+      lastPartsSig = JSON.stringify(customParts);
+      saveCustom('customParts', name);
+      buildParts();
+    }
+    if (form.parts.indexOf(name) < 0) form.parts.push(name);
+    form.partsOpen = false;
+    $('part-other').value = '';
+    partHint('', false);
+    syncForm();
+    return true;
+  }
+  function buildForm() {
+    $('mins-chips').innerHTML = MINS_PRESETS.map(function (m) {
+      return '<button type="button" class="chip" data-action="mins" data-v="' + m + '" aria-pressed="false">' + m + ' 分</button>';
+    }).join('');
+    buildSports();
+    $('levels').innerHTML = LEVELS.map(function (l) {
+      return '<button type="button" role="radio" class="l' + l.k + '" data-action="level" data-v="' + l.k + '" aria-checked="false">' + l.name + '</button>';
+    }).join('');
+    buildParts();
+  }
+  function syncForm() {
+    $('sports').querySelectorAll('button').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.v === form.sport));
+    });
+    $('levels').querySelectorAll('button').forEach(function (b) {
+      b.setAttribute('aria-checked', String(Number(b.dataset.v) === form.level));
+    });
+    $('parts').querySelectorAll('button').forEach(function (b) {
+      var on = b.dataset.action === 'partother' ? form.partsOpen : form.parts.indexOf(b.dataset.v) >= 0;
+      b.setAttribute('aria-pressed', String(on));
+    });
+    $('other-wrap').hidden = form.sport !== OTHER;
+    var relax = isRelax(form.sport);   // relax items: time, intensity and parts are switched off
+    $('fs-time').disabled = relax;
+    $('fs-level').disabled = relax;
+    $('fs-parts').disabled = relax;
+    $('relax-hint').hidden = !relax;
+    $('part-other-wrap').hidden = !form.partsOpen;
+    $('level-hint').textContent = LEVELS.filter(function (l) { return l.k === form.level; })[0].hint;
+    $('mins-chips').querySelectorAll('button').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(Number(b.dataset.v) === form.mins));
+    });
+    if (document.activeElement !== $('mins')) $('mins').value = form.mins ? String(form.mins) : '';
+  }
+  function showMsg(t, isErr) {
+    var el = $('msg');
+    el.textContent = t;
+    el.className = 'msg' + (isErr ? ' err' : '');
+    clearTimeout(msgTimer);
+    msgTimer = setTimeout(function () { el.textContent = ''; }, 3500);
+  }
+
+  function submit() {
+    if (selected > todayKey) return;
+    if (!form.sport) { showMsg('請先選一個運動項目。', true); return; }
+    if (form.sport === OTHER && !addCustomSport()) return;
+    var sport = form.sport;
+    var relax = isRelax(sport);
+    var entry;
+    if (relax) {
+      entry = { id: newId(), sport: sport, level: 0, parts: [], mins: 0 };
+    } else {
+      if (!(form.mins >= 0.5 && form.mins <= 600)) { showMsg('請填運動時間，0.5 到 600 分鐘。', true); return; }
+      if (form.partsOpen && $('part-other').value.trim() && !addCustomPart()) return;
+      if (!form.parts.length) { showMsg('請至少選一個運動部位。', true); return; }
+      var allParts = PARTS.concat(customParts);
+      entry = { id: newId(), sport: sport, level: form.level, parts: allParts.filter(function (p) { return form.parts.indexOf(p) >= 0; }), mins: form.mins };
+    }
+    if (!data[selected]) data[selected] = [];
+    var hadStamp = data[selected].some(function (e) { return !isRelax(e.sport); });
+    data[selected].push(entry);
+    persist(selected);
+    queueOp({ op: 'add', entry: sheetEntry(selected, entry) });
+    var stamped = !relax && !hadStamp;   // only a day with a real workout gets the stamp
+    if (stamped) {
+      freshKey = selected;
+      setTimeout(function () { freshKey = null; }, 900);
+    }
+    form.sport = ''; form.other = ''; form.parts = []; form.mins = 0; form.partsOpen = false;
+    $('other').value = '';
+    $('part-other').value = '';
+    syncForm();
+    renderAll();
+    showMsg(stamped ? '已蓋章！' : '已記錄。');
+  }
+
+  function removeEntry(k, i) {
+    if (!data[k]) return;
+    var gone = data[k][i];
+    data[k].splice(i, 1);
+    if (!data[k].length) delete data[k];
+    pendingDel = null;
+    persist(k);
+    if (gone) queueOp({ op: 'delete', id: gone.id });
+    renderAll();
+  }
+
+  /* ---------- render ---------- */
+  function renderAll() {
+    renderHead();
+    renderCal();
+    renderDay();
+    renderStats();
+  }
+
+  function renderHead() {
+    $('month-title').innerHTML = '<span class="yr">' + view.y + '</span> 年 ' + (view.m + 1) + ' 月';
+    $('next-btn').disabled = isCurrentMonth();
+    $('back-now').hidden = isCurrentMonth();
+    $('stats-title').textContent = isCurrentMonth() ? '本月統計' : (view.m + 1) + ' 月統計';
+  }
+
+  function renderCal() {
+    var first = new Date(view.y, view.m, 1);
+    var total = new Date(view.y, view.m + 1, 0).getDate();
+    var h = '';
+    for (var i = 0; i < first.getDay(); i++) h += '<span></span>';
+    for (var d = 1; d <= total; d++) {
+      var k = keyOf(view.y, view.m, d);
+      var list = data[k] || [];
+      var exN = list.filter(function (e) { return !isRelax(e.sport); }).length;
+      var done = exN > 0;
+      var future = k > todayKey;
+      var cls = 'day' + (k === todayKey ? ' today' : '');
+      var label = (view.m + 1) + '月' + d + '日' + (done ? '，已蓋章，共 ' + exN + ' 筆' : '') + (k === todayKey ? '，今天' : '');
+      h += '<button type="button" class="' + cls + '" data-action="pick" data-key="' + k + '"' +
+        (future ? ' disabled' : '') + ' aria-pressed="' + (k === selected) + '" aria-label="' + label + '"><span class="dn">' + d + '</span>' + (done ? stampSVG(k === freshKey) : '') + '</button>';
+    }
+    $('cal').innerHTML = h;
+  }
+
+  function renderDay() {
+    var p = selected.split('-').map(Number);
+    var dt = new Date(p[0], p[1] - 1, p[2]);
+    $('day-title').textContent = p[1] + ' 月 ' + p[2] + ' 日（週' + WEEK[dt.getDay()] + '）';
+    $('day-tag').textContent = selected === todayKey ? '今天' : (selected < todayKey ? '補記過去的日子' : '');
+    $('submit').textContent = selected === todayKey ? '今天打卡' : '補記這天';
+    $('submit').disabled = selected > todayKey;
+
+    var list = data[selected] || [];
+    $('entries-empty').hidden = list.length > 0;
+    $('entries').innerHTML = list.map(function (e, i) {
+      var sure = pendingDel && pendingDel.k === selected && pendingDel.i === i;
+      var rx = isRelax(e.sport);
+      return '<li class="entry"><div class="what"><strong>' + esc(e.sport) + '</strong>' +
+        (rx ? '<span class="pill relax">放鬆</span>' : '<span class="pill l' + e.level + '">' + LEVELS[e.level - 1].name + '</span>') +
+        (e.mins ? '<span class="mins num">' + fmtNum(e.mins) + ' 分鐘</span>' : '') + '</div>' +
+        '<div class="where">' + (rx ? '只計入項目次數' : (e.parts.length ? e.parts.map(esc).join('・') : '未選部位')) + '</div>' +
+        '<button type="button" class="del' + (sure ? ' sure' : '') + '" data-action="del" data-i="' + i + '" aria-label="刪除這筆紀錄">' +
+        (sure ? '確定刪除？' : '刪除') + '</button></li>';
+    }).join('');
+  }
+
+  function fmtMins(m) {
+    if (m >= 60) {
+      var h = Math.floor(m / 60);
+      return h + '<small>小時</small> ' + fmtNum(m - h * 60) + '<small>分</small>';
+    }
+    return fmtNum(m) + '<small>分</small>';
+  }
+  /* the week containing today, Sunday to Saturday like the calendar; counts across month boundaries */
+  function weekStats() {
+    var start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+    var days = 0, mins = 0;
+    for (var i = 0; i < 7; i++) {
+      var dt = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+      var list = data[keyOf(dt.getFullYear(), dt.getMonth(), dt.getDate())] || [];
+      var ex = list.filter(function (e) { return !isRelax(e.sport); });
+      if (ex.length) days++;
+      ex.forEach(function (e) { mins += e.mins || 0; });
+    }
+    return { days: days, mins: mins };
+  }
+  function bars(map, order, markRelax) {
+    var names = Object.keys(map);
+    if (order) names.sort(function (a, b) { return order.indexOf(a) - order.indexOf(b); });
+    names.sort(function (a, b) { return map[b] - map[a]; });
+    var max = names.reduce(function (a, n) { return Math.max(a, map[n]); }, 1);
+    return '<div class="bars">' + names.map(function (n) {
+      return '<div class="row"><span class="l">' + esc(n) + '</span><span class="track"><b' + (markRelax && isRelax(n) ? ' class="relax"' : '') + ' style="width:' +
+        Math.round(map[n] / max * 100) + '%"></b></span><span class="v">' + map[n] + '</span></div>';
+    }).join('') + '</div>';
+  }
+
+  function renderStats() {
+    var total = new Date(view.y, view.m + 1, 0).getDate();
+    var days = 0, count = 0, totalMins = 0, timed = 0, relaxN = 0;
+    var sports = {}, parts = {}, levels = { 1: 0, 2: 0, 3: 0 };
+    for (var d = 1; d <= total; d++) {
+      var list = data[keyOf(view.y, view.m, d)] || [];
+      var exDay = false;
+      list.forEach(function (e) {
+        sports[e.sport] = (sports[e.sport] || 0) + 1;     // every item counts in the sports bar chart
+        if (isRelax(e.sport)) { relaxN++; return; }       // relax items stop here
+        exDay = true;
+        count++;
+        if (e.mins) { totalMins += e.mins; timed++; }
+        levels[e.level]++;
+        e.parts.forEach(function (p) { parts[p] = (parts[p] || 0) + 1; });
+      });
+      if (exDay) days++;
+    }
+    if (!count && !relaxN) {
+      $('stats').innerHTML = '<p class="empty">這個月還沒有紀錄。在月曆上選一天打卡，統計會出現在這裡。</p>';
+      return;
+    }
+    var cur = isCurrentMonth();
+    var wk = weekStats();
+    var weekCell = cur
+      ? '<div class="stat"><div class="big">' + wk.days + '<small>/7 天</small></div><div class="cap">本週運動天數</div></div>'
+      : '<div class="stat"><div class="big">' + (Math.round(days * 7 / total * 10) / 10) + '<small>/7 天</small></div><div class="cap">平均每週運動天數</div></div>';
+    var h = '<div class="stats3">' +
+      '<div class="stat"><div class="big">' + days + '<small>/' + total + ' 天</small></div><div class="cap">打卡天數</div></div>' +
+      '<div class="stat"><div class="big">' + count + '<small>筆</small></div><div class="cap">運動紀錄</div></div>' +
+      weekCell + '</div>';
+    var tb = '<div class="block sec-violet"><h3>運動時間</h3>';
+    if (timed) {
+      tb += '<div class="time2">' +
+        '<div><div class="big2">' + fmtMins(totalMins) + '</div><div class="cap">累計時間</div></div>' +
+        '<div><div class="big2">' + fmtMins(totalMins / timed >= 10 ? Math.round(totalMins / timed) : Math.round(totalMins / timed * 10) / 10) + '</div><div class="cap">每次平均</div></div></div>';
+    }
+    if (cur) {
+      var pct = Math.min(100, Math.round(wk.mins / WEEK_GOAL * 100));
+      tb += '<div class="goal"><div class="goal-top"><span>本週 <span class="num">' + fmtNum(wk.mins) + '</span> / ' + WEEK_GOAL + ' 分鐘</span><span class="num">' + (wk.mins >= WEEK_GOAL ? '已達標' : pct + '%') + '</span></div>' +
+        '<div class="track" role="img" aria-label="本週運動時間 ' + fmtNum(wk.mins) + ' 分鐘，參考目標 ' + WEEK_GOAL + ' 分鐘"><b style="width:' + pct + '%"></b></div>' +
+        '<p class="hint">參考：世界衛生組織建議成人每週至少 150 分鐘中等強度運動，這裡不分強度，全部計入。</p></div>';
+    } else if (!timed) {
+      tb += '<p class="empty">這個月沒有記錄運動時間。</p>';
+    }
+    h += '<div class="block sec-blue"><h3>運動項目</h3>' + bars(sports, null, true) +
+      (relaxN ? '<p class="note">綠色長條是放鬆項目（滾筒、伸展），只列入這張圖，不計入打卡天數和其他統計。</p>' : '') + '</div>';
+    if (count) h += '<div class="block sec-teal"><h3>強度分布</h3><div class="stack" role="img" aria-label="強度分布">' +
+      [1, 2, 3].filter(function (k) { return levels[k]; }).map(function (k) {
+        return '<b class="l' + k + '" style="flex:' + levels[k] + '"></b>';
+      }).join('') + '</div><div class="stack-legend">' +
+      [1, 2, 3].map(function (k) {
+        return '<span><i class="sw l' + k + '"></i>' + LEVELS[k - 1].name + ' <span class="num">' + levels[k] + '</span></span>';
+      }).join('') + '</div></div>';
+    if (count) h += '<div class="block sec-amber"><h3>運動部位</h3>' + bars(parts, PARTS.concat(customParts)) +
+      '<p class="note">部位次數以每筆紀錄計算，一筆可以同時算到多個部位。</p></div>';
+    if (count) h += tb + '</div>';
+    $('stats').innerHTML = h;
+  }
+
+  /* ---------- events ---------- */
+  function changeMonth(delta) {
+    var m = view.m + delta, y = view.y;
+    if (m < 0) { m = 11; y--; }
+    if (m > 11) { m = 0; y++; }
+    view = { y: y, m: m };
+    selected = isCurrentMonth() ? todayKey : keyOf(y, m, 1);
+    pendingDel = null;
+    renderAll();
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-action]');
+    if (!b) return;
+    var a = b.dataset.action;
+    if (a === 'prev') changeMonth(-1);
+    else if (a === 'next') { if (!isCurrentMonth()) changeMonth(1); }
+    else if (a === 'today') {
+      view = { y: now.getFullYear(), m: now.getMonth() };
+      selected = todayKey; pendingDel = null; renderAll();
+    }
+    else if (a === 'pick') { selected = b.dataset.key; pendingDel = null; renderCal(); renderDay(); }
+    else if (a === 'sport') {
+      form.sport = form.sport === b.dataset.v ? '' : b.dataset.v;
+      syncForm();
+      if (form.sport === OTHER) { otherHint('', false); $('other').focus(); }
+    }
+    else if (a === 'addsport') { addCustomSport(); }
+    else if (a === 'partother') { form.partsOpen = !form.partsOpen; partHint('', false); syncForm(); if (form.partsOpen) $('part-other').focus(); }
+    else if (a === 'addpart') { addCustomPart(); }
+    else if (a === 'savesync') { enableSync($('sync-url').value); }
+    else if (a === 'clearsync') { disableSync(); }
+    else if (a === 'level') { form.level = Number(b.dataset.v); syncForm(); }
+    else if (a === 'mins') { var mv = Number(b.dataset.v); form.mins = form.mins === mv ? 0 : mv; syncForm(); }
+    else if (a === 'part') {
+      var i = form.parts.indexOf(b.dataset.v);
+      if (i >= 0) form.parts.splice(i, 1); else form.parts.push(b.dataset.v);
+      syncForm();
+    }
+    else if (a === 'del') {
+      var idx = Number(b.dataset.i);
+      if (pendingDel && pendingDel.k === selected && pendingDel.i === idx) {
+        clearTimeout(pendingTimer);
+        removeEntry(selected, idx);
+      } else {
+        pendingDel = { k: selected, i: idx };
+        clearTimeout(pendingTimer);
+        pendingTimer = setTimeout(function () { pendingDel = null; renderDay(); }, 3000);
+        renderDay();
+      }
+    }
+  });
+  $('other').addEventListener('input', function (e) { form.other = e.target.value; });
+  $('mins').addEventListener('input', function (e) {
+    var v = Math.round(Number(e.target.value) * 2) / 2;   // half-minute steps
+    form.mins = v > 0 ? v : 0;
+    syncForm();
+  });
+  $('mins').addEventListener('blur', syncForm);
+  $('sync-url').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); enableSync($('sync-url').value); }
+  });
+  $('part-other').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); addCustomPart(); }
+  });
+  $('other').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); addCustomSport(); }
+  });
+  $('f').addEventListener('submit', function (e) { e.preventDefault(); submit(); });
+
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && sheetUrl && Date.now() - lastPull > 30000) pullSheet();
+  });
+  window.addEventListener('online', function () { if (sheetUrl) flushQueue(); });
+  init();
+})();
+</script>
+</body>
+</html>
